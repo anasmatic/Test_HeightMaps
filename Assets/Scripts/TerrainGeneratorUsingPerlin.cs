@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using PixelsForGlory.ComputationalSystem;
 using UnityEngine;
 
 public class TerrainGeneratorUsingPerlin : MonoBehaviour {
