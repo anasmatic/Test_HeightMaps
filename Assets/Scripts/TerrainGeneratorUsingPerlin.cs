@@ -138,29 +138,54 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			}
 		}
 	}
-
+	private IEnumerator coroutine;
 	public void SmoothAroundIngredients(){
 		float t = Time.time;
-		OtherSideSmoothing(ingredientsCorners[0],ingredientsCorners[1]);//x direction
-		SideSmoothing(ingredientsCorners[2],ingredientsCorners[3]);//z direction
+		coroutine = OtherSideSmoothingEnum(ingredientsCorners[0],ingredientsCorners[1]);
+		StartCoroutine(OtherSideSmoothingEnum(ingredientsCorners[0],ingredientsCorners[1]));
+		
+		//OtherSideSmoothing(ingredientsCorners[0],ingredientsCorners[1]);//x direction
+		//SideSmoothing(ingredientsCorners[2],ingredientsCorners[3]);//z direction
 		
 		terrain.terrainData.SetHeights(0,0,betaHeights);
 
 		float finalTime = Time.time-t;
 		print("Time : "+finalTime.ToString());
-	}
-	void OtherSideSmoothing(Vector3 pointA, Vector3 pointZ){
-		print("-from "+pointA+"to"+pointZ);
 		
+	}
+	private IEnumerator OtherSideSmoothingEnum(Vector3 pointA, Vector3 pointZ){
+		
+		pointA.z--; pointZ.z++;//for higher ground this expansion is expanding one side only
 		Vector3 point = pointA;
-		pointA.z--; pointZ.z++;
-		for (int i = (int)pointA.z; i <= (int)/*pointA.x*/pointZ.z; i++)
+		for (int i = (int)pointA.z; i <= (int)/*pointA.z*/pointZ.z; i++)
 		{
+			print("-from "+pointA+"to"+pointZ);
 			print("i:"+i);
 			point.z = i;
+			Instantiate(testCube,point,Quaternion.identity);
+			HighGroundSmoother.SmoothLineZHigh(point,ref betaHeights, elevation);//vertical to this point
+			HighGroundSmoother.SmoothLineBackwardZHigh(point,ref betaHeights, elevation);//FIXME: for higher ground this function in not good
+			terrain.terrainData.SetHeights(0,0,betaHeights);
+			
+			yield return new WaitForSeconds(2.0f);
+			
+		}
+	}
+	
+
+	void OtherSideSmoothing(Vector3 pointA, Vector3 pointZ){
+		//		print("-from "+pointA+"to"+pointZ);
+		
+		Vector3 point = pointA;
+		pointA.z--; pointZ.z++;//for higher ground this expansion is expanding one side only
+		for (int i = (int)pointA.z; i <= (int)/*pointA.z*/pointZ.z; i++)
+		{
+			//			print("i:"+i);
+			point.z = i;
 			//Instantiate(testCube,point,Quaternion.identity);
-			SmoothLineX(point);//vertical to this point
-			SmoothLineBackwardX(point);
+			//SmoothLineX(point);//vertical to this point
+			//SmoothLineBackwardX(point);//FIXME: for higher ground this function in not good
+			
 		}
 	}
 	void SideSmoothing(Vector3 pointA, Vector3 pointZ){
@@ -173,8 +198,8 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			//print("i:"+i);
 			point.x = i;
 			//Instantiate(testCube,point,Quaternion.identity);
-			SmoothLineY(point);//vertical to this point
-			SmoothLineBackwardY(point);
+			//SmoothLineY(point);//vertical to this point //FIXME:  as bad as SmoothLineBackwardX
+			//SmoothLineBackwardY(point);//FIXME:  as bad as SmoothLineBackwardX
 		}
 	}
 	void SmoothLineX(Vector3 startPoint){
@@ -187,7 +212,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			//Color[] colors = new Color[]{Color.black,Color.blue,Color.cyan,Color.gray,Color.green,Color.magenta,Color.red,Color.white,Color.yellow,Color.black};
 			//String[] colorsS = new String[]{"black","blue","cyan","gray","green","magenta","red","white","yellow","black"};
 			Vector3 ingredientsCenter0 = startPoint;//for testing :ingredientsCenters[0];
-			ingredientsCenter0 = SwichZandY(ingredientsCenter0);
+			ingredientsCenter0 = SmoothersHelpers.SwichZandY(ingredientsCenter0);
 			Vector3 ommak1 = ingredientsCenter0;
 			newIngredCenters.Add(ommak1);
 			for (int i = 0; i < 10; i++)
@@ -203,9 +228,9 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 				Vector3 targetDir = ommak2 - ommak1;// - ommak2;
 				float angle = Vector3.Angle(targetDir, Vector3.forward);
 				//print("	old point : "+ommak2);
-				//Instantiate(testSubCube,SwichZandY(ommak2),Quaternion.identity);
+				//Instantiate(testSubCube,SmoothersHelpers.SwichZandY(ommak2),Quaternion.identity);
 	
-				Vector3 newOmmak = chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
+				Vector3 newOmmak = SmoothersHelpers.chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
 				//print("	new point : "+newOmmak);
 				betaHeights[(int)ingredientsCenter0.y+1,(int)ingredientsCenter0.x] = newOmmak.z/elevation;
 				//print("		angle:"+angle+" ,color:"+colorsS[i]);
@@ -234,7 +259,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			//Color[] colors = new Color[]{Color.black,Color.blue,Color.cyan,Color.gray,Color.green,Color.magenta,Color.red,Color.white,Color.yellow,Color.black};
 			//String[] colorsS = new String[]{"black","blue","cyan","gray","green","magenta","red","white","yellow","black"};
 			Vector3 ingredientsCenter0 = startPoint;//for testing :ingredientsCenters[0];
-			ingredientsCenter0 = SwichZandY(ingredientsCenter0);
+			ingredientsCenter0 = SmoothersHelpers.SwichZandY(ingredientsCenter0);
 			Vector3 ommak1 = ingredientsCenter0;
 			newIngredCenters.Add(ommak1);
 			for (int i = 0; i < 10; i++)
@@ -250,9 +275,9 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 				Vector3 targetDir = ommak2 - ommak1;// - ommak2;
 				float angle = Vector3.Angle(targetDir, Vector3.forward);
 				//print("	old point : "+ommak2);
-				//Instantiate(testSubCube,SwichZandY(ommak2),Quaternion.identity);
+				//Instantiate(testSubCube,SmoothersHelpers.SwichZandY(ommak2),Quaternion.identity);
 	
-				Vector3 newOmmak = chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
+				Vector3 newOmmak = SmoothersHelpers.chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
 				//print("	new point : "+newOmmak);
 				betaHeights[(int)ingredientsCenter0.y-1,(int)ingredientsCenter0.x] = newOmmak.z/elevation;
 				//print("		angle:"+angle+" ,color:"+colorsS[i]);
@@ -281,7 +306,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			//Color[] colors = new Color[]{Color.black,Color.blue,Color.cyan,Color.gray,Color.green,Color.magenta,Color.red,Color.white,Color.yellow,Color.black};
 			//String[] colorsS = new String[]{"black","blue","cyan","gray","green","magenta","red","white","yellow","black"};
 			Vector3 ingredientsCenter0 = startPoint;//for testing :ingredientsCenters[0];
-			ingredientsCenter0 = SwichZandY(ingredientsCenter0);
+			ingredientsCenter0 = SmoothersHelpers.SwichZandY(ingredientsCenter0);
 			Vector3 ommak1 = ingredientsCenter0;
 			newIngredCenters.Add(ommak1);
 			for (int i = 0; i < 10; i++)
@@ -299,7 +324,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 				//print("	old point : "+ommak2);
 				//Instantiate(testSubCube,SwichZandY(ommak2),Quaternion.identity);
 	
-				Vector3 newOmmak = chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
+				Vector3 newOmmak = SmoothersHelpers.chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
 				//print("	new point : "+newOmmak);
 				betaHeights[(int)ingredientsCenter0.y+1,(int)ingredientsCenter0.x] = newOmmak.z/elevation;
 				//print("		angle:"+angle+" ,color:"+colorsS[i]);
@@ -328,7 +353,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			//Color[] colors = new Color[]{Color.black,Color.blue,Color.cyan,Color.gray,Color.green,Color.magenta,Color.red,Color.white,Color.yellow,Color.black};
 			//String[] colorsS = new String[]{"black","blue","cyan","gray","green","magenta","red","white","yellow","black"};
 			Vector3 ingredientsCenter0 = startPoint;//for testing :ingredientsCenters[0];
-			ingredientsCenter0 = SwichZandY(ingredientsCenter0);
+			ingredientsCenter0 = SmoothersHelpers.SwichZandY(ingredientsCenter0);
 			Vector3 ommak1 = ingredientsCenter0;
 			newIngredCenters.Add(ommak1);
 			for (int i = 0; i < 10; i++)
@@ -346,7 +371,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 				//print("	old point : "+ommak2);
 				//Instantiate(testSubCube,SwichZandY(ommak2),Quaternion.identity);
 	
-				Vector3 newOmmak = chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
+				Vector3 newOmmak = SmoothersHelpers.chnageTerrainElevationInPointAccordingToAngle(angle,ommak2,newIngredCenters[i]);
 				//print("	new point : "+newOmmak);
 				betaHeights[(int)ingredientsCenter0.y-1,(int)ingredientsCenter0.x] = newOmmak.z/elevation;
 				//print("		angle:"+angle+" ,color:"+colorsS[i]);
@@ -366,20 +391,13 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 		}
 	}
 
-	Vector3 SwichZandY(Vector3 vector3){
-		float z = vector3.y;
-		vector3.y = vector3.z;
-		vector3.z = z;
-		return vector3;
-	}
-	Vector3 SwichXandY(Vector3 vector3){
-		float x = vector3.x;
-		vector3.x = vector3.y;
-		vector3.y = x;
-		return vector3;
-	}
 	
-	
+    
+
+
+
+
+
     void OnDrawGizmos() {
 		/*
 		bool trigger = false;
@@ -451,26 +469,6 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			
 		}
 		*/
-    }
-
-    private Vector3 chnageTerrainElevationInPointAccordingToAngle(float angle, Vector3 ommak2, Vector3 lastNewPoint)
-    {
-		var newDirection = ommak2;
-		var deffranceInAngle = angle - 90;
-		//print("		deffranceInAngle:"+deffranceInAngle+", Abs:"+(Mathf.Abs(deffranceInAngle) > 30));
-		//if deffranceInAngle is positive value , then the point to be reached is high
-		//else if deffranceInAngle is nigatve , then the point is low
-        if(Mathf.Abs(deffranceInAngle) > 30){
-			var rot = Quaternion.AngleAxis(30,Vector3.forward);
-			
-			newDirection = (rot * Vector3.forward)*.8f;
-			//print("			rot:"+rot+" >> "+newDirection);
-			newDirection.x = ommak2.x;
-			newDirection.y = ommak2.y;
-			newDirection.z = lastNewPoint.z + (ommak2.z)*UnityEngine.Random.Range(0.20f,.25f);
-			//print("			new z:"+newDirection.z+"vs old z:"+ommak2.z);
-		}
-		return newDirection;
     }
 }
 
