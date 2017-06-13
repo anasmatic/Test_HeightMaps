@@ -20,7 +20,7 @@ public class SmoothersHelpers : MonoBehaviour {
 			var rot = Quaternion.AngleAxis(30,Vector3.forward);
 			
 			newDirection = (rot * Vector3.forward)*.8f;
-			print("			rot:"+rot+" >> "+newDirection);
+		//	print("			rot:"+rot+" >> "+newDirection);
 			newDirection.x = ommak2.x;
 			newDirection.y = ommak2.y;
 			if(deffranceInAngle <= 0)
@@ -28,7 +28,7 @@ public class SmoothersHelpers : MonoBehaviour {
 			else
 				newDirection.z = lastNewPoint.z - (ommak2.z)*UnityEngine.Random.Range(0.75f,.80f);
 
-			print("			new z:"+newDirection.z+"vs old z:"+ommak2.z);
+		//	print("			new z:"+newDirection.z+"vs old z:"+ommak2.z);
 		}
 		return newDirection;
     }

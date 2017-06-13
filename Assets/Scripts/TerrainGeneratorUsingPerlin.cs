@@ -33,6 +33,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
     private List<Vector3> ingredientsCenters =  new List<Vector3>();
     private List<Vector3> ingredientsCorners;
 	float[,] betaHeights;
+	float[,] betaHeightsForTest;
 
     // Use this for initialization
     void Start () {
@@ -53,12 +54,15 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 		if(NoiseScale <= 0) NoiseScale = 0.0001f;
 		terrain = GetComponent<Terrain>();
 		betaHeights = new float[,]{};
+		betaHeightsForTest = new float[,]{};
 		printCount =0;
 		terrain.terrainData = GenerateSmoothTerrain(terrain.terrainData);
 		float finalTime = Time.time-t;
 		print("Time : "+finalTime.ToString());
 	}
 	public void SharpAvoidIngredients(){
+		betaHeightsForTest = (float[,]) betaHeights.Clone();//save for testing
+		
 		//save ingreadiants points
 		SaveIngreadiantsPoints();
 		AddIngredientPointsToHeightMap(betaHeights);
@@ -141,11 +145,20 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 	private IEnumerator coroutine;
 	public void SmoothAroundIngredients(){
 		float t = Time.time;
-		coroutine = OtherSideSmoothingEnum(ingredientsCorners[0],ingredientsCorners[1]);
-		StartCoroutine(OtherSideSmoothingEnum(ingredientsCorners[0],ingredientsCorners[1]));
-		
-		//OtherSideSmoothing(ingredientsCorners[0],ingredientsCorners[1]);//x direction
-		//SideSmoothing(ingredientsCorners[2],ingredientsCorners[3]);//z direction
+ 
+		for (int i = 0; i < (int)ingredientsCorners.Count-3; i+=4)
+		{
+			print((0+i)+","+(1+i)+","+(2+i)+","+(3+i)+",");
+			if(ingredientsCorners[0+i].y > betaHeightsForTest[(int)ingredientsCorners[0+i].x,(int)ingredientsCorners[0+i].z]){
+				ZSideHighSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);
+				XSideHighSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);
+				print("HIGH");
+			}else{
+				OtherSideSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);//x direction
+				SideSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);//z direction
+				print("LOW");
+			}
+		}		
 		
 		terrain.terrainData.SetHeights(0,0,betaHeights);
 
@@ -153,22 +166,28 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 		print("Time : "+finalTime.ToString());
 		
 	}
-	private IEnumerator OtherSideSmoothingEnum(Vector3 pointA, Vector3 pointZ){
-		
-		pointA.z--; pointZ.z++;//for higher ground this expansion is expanding one side only
+	private void ZSideHighSmoothing(Vector3 pointA, Vector3 pointZ){
+		pointA.z-=1; pointZ.z+=1;//for higher ground this expansion is expanding one side only
 		Vector3 point = pointA;
+		if(pointA.z < 0)pointA.z = 0;//donot allow minus values
 		for (int i = (int)pointA.z; i <= (int)/*pointA.z*/pointZ.z; i++)
 		{
-			print("-from "+pointA+"to"+pointZ);
-			print("i:"+i);
 			point.z = i;
-			Instantiate(testCube,point,Quaternion.identity);
+			//Instantiate(testCube,point,Quaternion.identity);
 			HighGroundSmoother.SmoothLineZHigh(point,ref betaHeights, elevation);//vertical to this point
 			HighGroundSmoother.SmoothLineBackwardZHigh(point,ref betaHeights, elevation);//FIXME: for higher ground this function in not good
-			terrain.terrainData.SetHeights(0,0,betaHeights);
-			
-			yield return new WaitForSeconds(2.0f);
-			
+		}
+	}
+	private void XSideHighSmoothing(Vector3 pointA, Vector3 pointZ){
+		pointA.x--; pointZ.x++;
+		if(pointA.x < 0)pointA.x = 0;//donot allow minus values
+		var point = pointA;
+		for (int i = (int)pointA.x; i <= (int)/*pointA.z*/pointZ.x; i++)
+		{
+			point.x = i;
+			//Instantiate(testCube,point, Quaternion.identity);
+			HighGroundSmoother.SmoothLineBackwardXHigh(point,ref betaHeights, elevation);//FIXME: for higher ground this function in not good
+			HighGroundSmoother.SmoothLineXHigh(point,ref betaHeights, elevation, testSubCube );//vertical to this point
 		}
 	}
 	
@@ -178,28 +197,29 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 		
 		Vector3 point = pointA;
 		pointA.z--; pointZ.z++;//for higher ground this expansion is expanding one side only
+		if(pointA.z < 0)pointA.z = 0;//donot allow minus values
 		for (int i = (int)pointA.z; i <= (int)/*pointA.z*/pointZ.z; i++)
 		{
 			//			print("i:"+i);
 			point.z = i;
 			//Instantiate(testCube,point,Quaternion.identity);
-			//SmoothLineX(point);//vertical to this point
-			//SmoothLineBackwardX(point);//FIXME: for higher ground this function in not good
+			SmoothLineX(point);//vertical to this point
+			SmoothLineBackwardX(point);//FIXME: for higher ground this function in not good
 			
 		}
 	}
 	void SideSmoothing(Vector3 pointA, Vector3 pointZ){
-		//print("-from "+pointA+"to"+pointZ);
 		
 		Vector3 point = pointA;
 		pointA.x--; pointZ.x++;
+		if(pointA.x < 0)pointA.x = 0;//donot allow minus values
 		for (int i = (int)pointA.x; i <= (int)/*pointA.x*/pointZ.x; i++)
 		{
 			//print("i:"+i);
 			point.x = i;
 			//Instantiate(testCube,point,Quaternion.identity);
-			//SmoothLineY(point);//vertical to this point //FIXME:  as bad as SmoothLineBackwardX
-			//SmoothLineBackwardY(point);//FIXME:  as bad as SmoothLineBackwardX
+			SmoothLineY(point);//vertical to this point //FIXME:  as bad as SmoothLineBackwardX
+			SmoothLineBackwardY(point);//FIXME:  as bad as SmoothLineBackwardX
 		}
 	}
 	void SmoothLineX(Vector3 startPoint){
@@ -358,11 +378,9 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			newIngredCenters.Add(ommak1);
 			for (int i = 0; i < 10; i++)
 			{
-				//Gizmos.color = colors[i];
-
 				Vector3 ommak2 = ingredientsCenter0 ;
 				ommak2.y--;//next step
-				
+				if(ommak2.y < 0 || ingredientsCenter0.y < 1)continue;//donot allow minus values
 				//ommak2 = SwichZandY(ommak2);
 				//print("-swiched:"+ommak2 +","+ingredientsCenter0);
 				ommak2.z = betaHeights[(int)ingredientsCenter0.y-1,(int)ingredientsCenter0.x]*elevation;
