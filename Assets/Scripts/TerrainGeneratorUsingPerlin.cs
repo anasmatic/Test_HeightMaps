@@ -8,8 +8,8 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 	public GameObject testCube;
 	public GameObject testSubCube;
 	public float elevation = 50;
-	public int width = 128;
-	public int height = 128;
+	public int width = 256;
+	public int height = 256;
 
 	[Range(0,50)]
 	public float NoiseScale = 20f;
@@ -145,18 +145,22 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 	private IEnumerator coroutine;
 	public void SmoothAroundIngredients(){
 		float t = Time.time;
- 
-		for (int i = 0; i < (int)ingredientsCorners.Count-3; i+=4)
+		print("SmoothAroundIngredients");
+;		for (int i = 0; i < (int)ingredientsCorners.Count-3; i+=4)
 		{
-			print((0+i)+","+(1+i)+","+(2+i)+","+(3+i)+",");
+			print((0+i)+","+(1+i)+","+(2+i)+","+(3+i));
 			if(ingredientsCorners[0+i].y > betaHeightsForTest[(int)ingredientsCorners[0+i].x,(int)ingredientsCorners[0+i].z]){
-				ZSideHighSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);
-				XSideHighSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);
-				print("HIGH");
+				//ZSideHighSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);
+				//XSideHighSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);
+				//print("HIGH");
+				HighGroundSmoother.SquareSmootherForHighGround(new Vector3[]{ingredientsCorners[0+i],ingredientsCorners[3+i],
+																		ingredientsCorners[1+i],ingredientsCorners[2+i]},width,height);
+				print("________________________________________");
+				//return;
 			}else{
 				OtherSideSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);//x direction
 				SideSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);//z direction
-				print("LOW");
+				//print("LOW");
 			}
 		}		
 		

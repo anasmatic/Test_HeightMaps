@@ -8,6 +8,52 @@ public class HighGroundSmoother : MonoBehaviour {
 	void Start () {
 		
 	}
+	internal static void SquareSmootherForHighGround(Vector3[] square ,int width, int height){
+		Vector3 startPoint;
+		Vector3 endPoint;
+		Vector3 midPoint;
+		bool xstop, zstop;
+		for (int t = 0; t < 5; t++){
+			for (int i = 0; i < 4; i++)
+			{
+				startPoint = midPoint = square[i];
+				int endIndex = (i==3)? 0:(i+1);
+				endPoint = square[endIndex];
+	print("startPoint:"+startPoint+" > "+endPoint);
+				xstop = zstop = false;
+				while (xstop && zstop){
+					if(startPoint.x < endPoint.x && midPoint.x <= endPoint.x){
+						midPoint.x++;//will stop one step from end point
+					}else if(startPoint.x > endPoint.x && midPoint.x >= endPoint.x){
+						midPoint.x--;//will stop one step from end point
+					}else{
+						xstop = true;
+					}
+
+					if(startPoint.z < endPoint.z && midPoint.z <= endPoint.z){
+						midPoint.z++;//will stop one step from end point
+					}else if(startPoint.z > endPoint.z && midPoint.z >= endPoint.z){
+						midPoint.z--;//will stop one step from end point
+					}else{
+						if(xstop) { //so ystop= true as well , but I don't need to define this var
+							zstop = true;
+						}
+					}
+				}
+			}
+			/*
+				manual system to expand the corner points, this is done at the end to be ready for next round
+					#####		##0##
+					##0##		#####
+					#3#1#	=>	3###1
+					##2##		#####
+					#####		##2##
+			*/
+			if(square[0].z == 0 || square[3].x == 0 || square[1].x == width || square[2].z == height)
+				break;//TODO: try to fix the value that hits boarder, and contiue loop.
+			square[0].z--;square[1].x++;square[2].z++;square[3].x--;
+		}
+	}
 	
 	//TODO: fix smoothness it is very bad, (possion fixed)
 	internal static void SmoothLineZHigh(Vector3 startPoint,ref float[,] betaHeights, float elevation){
@@ -109,7 +155,7 @@ public class HighGroundSmoother : MonoBehaviour {
 
 	//TODO: fix smothness end , positon fixed
 	internal static void SmoothLineXHigh(Vector3 startPoint,ref float[,] betaHeights, float elevation, GameObject testSubCube){
-
+		
 		bool trigger = false;
 		List<Vector3> newIngredCenters;
 		if(betaHeights.Length > 0){
@@ -157,6 +203,7 @@ public class HighGroundSmoother : MonoBehaviour {
 	//TODO: fix softness , (position fixed)
 	internal static void SmoothLineBackwardXHigh(Vector3 startPoint,ref float[,] betaHeights, float elevation)
 	{
+
 		bool trigger = false;
 		List<Vector3> newIngredCenters;
 		if(betaHeights.Length > 0){
