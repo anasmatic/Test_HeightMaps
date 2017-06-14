@@ -13,7 +13,7 @@ public class HighGroundSmoother : MonoBehaviour {
 		Vector3 endPoint;
 		Vector3 midPoint;
 		bool xstop, zstop;
-		for (int t = 0; t < 5; t++){
+		for (int t = 0; t < 6; t++){
 			for (int i = 0; i < 4; i++)
 			{
 				startPoint = midPoint = square[i];
@@ -21,24 +21,26 @@ public class HighGroundSmoother : MonoBehaviour {
 				endPoint = square[endIndex];
 	print("startPoint:"+startPoint+" > "+endPoint);
 				xstop = zstop = false;
-				while (xstop && zstop){
-					if(startPoint.x < endPoint.x && midPoint.x <= endPoint.x){
+				//while (!xstop && !zstop){
+				while ( midPoint.x != endPoint.x && midPoint.z != endPoint.z ){
+					if(startPoint.x < endPoint.x && midPoint.x < endPoint.x){
 						midPoint.x++;//will stop one step from end point
-					}else if(startPoint.x > endPoint.x && midPoint.x >= endPoint.x){
+					}else if(startPoint.x > endPoint.x && midPoint.x > endPoint.x){
 						midPoint.x--;//will stop one step from end point
 					}else{
 						xstop = true;
 					}
 
-					if(startPoint.z < endPoint.z && midPoint.z <= endPoint.z){
+					if(startPoint.z < endPoint.z && midPoint.z < endPoint.z){
 						midPoint.z++;//will stop one step from end point
-					}else if(startPoint.z > endPoint.z && midPoint.z >= endPoint.z){
+					}else if(startPoint.z > endPoint.z && midPoint.z > endPoint.z){
 						midPoint.z--;//will stop one step from end point
 					}else{
-						if(xstop) { //so ystop= true as well , but I don't need to define this var
+						//if(xstop) { //so ystop= true as well , but I don't need to define this var
 							zstop = true;
-						}
+						//}
 					}
+					print("	midPoint:"+midPoint+", ??:"+( midPoint.x != endPoint.x)+" && "+(midPoint.z != endPoint.z ));
 				}
 			}
 			/*
