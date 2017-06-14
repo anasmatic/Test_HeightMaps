@@ -8,10 +8,11 @@ public class HighGroundSmoother : MonoBehaviour {
 	void Start () {
 		
 	}
-	internal static void SquareSmootherForHighGround(Vector3[] square ,int width, int height){
+	internal static void SquareSmootherForHighGround(Vector3[] square ,ref float[,] betaHeights, float elevation,int width, int height){
 		Vector3 startPoint;
 		Vector3 endPoint;
 		Vector3 midPoint;
+		Vector3 prevMidPoint;
 		bool xstop, zstop;
 		for (int t = 0; t < 6; t++){
 			for (int i = 0; i < 4; i++)
@@ -23,6 +24,7 @@ public class HighGroundSmoother : MonoBehaviour {
 				xstop = zstop = false;
 				//while (!xstop && !zstop){
 				while ( midPoint.x != endPoint.x && midPoint.z != endPoint.z ){
+					prevMidPoint = midPoint;
 					if(startPoint.x < endPoint.x && midPoint.x < endPoint.x){
 						midPoint.x++;//will stop one step from end point
 					}else if(startPoint.x > endPoint.x && midPoint.x > endPoint.x){
@@ -40,9 +42,17 @@ public class HighGroundSmoother : MonoBehaviour {
 							zstop = true;
 						//}
 					}
+
+					Vector3 targetDir = midPoint - prevMidPoint;// - ommak2;
+					float angle = Vector3.Angle(targetDir, Vector3.forward);
+					Vector3 newOmmak = ChnageTerrainElevationInPointAccordingToAngle(angle, SmoothersHelpers.SwichZandY(midPoint), SmoothersHelpers.SwichZandY(prevMidPoint), true);
+					betaHeights[(int)midPoint.z,(int)midPoint.x] = newOmmak.z/elevation;
 					print("	midPoint:"+midPoint+", ??:"+( midPoint.x != endPoint.x)+" && "+(midPoint.z != endPoint.z ));
 				}
 			}
+
+			
+
 			/*
 				manual system to expand the corner points, this is done at the end to be ready for next round
 					#####		##0##

@@ -154,9 +154,10 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 				//XSideHighSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);
 				//print("HIGH");
 				HighGroundSmoother.SquareSmootherForHighGround(new Vector3[]{ingredientsCorners[0+i],ingredientsCorners[3+i],
-																		ingredientsCorners[1+i],ingredientsCorners[2+i]},width,height);
+																		ingredientsCorners[1+i],ingredientsCorners[2+i]},ref betaHeights, elevation, width,height);
 				print("________________________________________");
-				//return;
+				terrain.terrainData.SetHeights(0,0,betaHeights);
+				return;
 			}else{
 				OtherSideSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);//x direction
 				SideSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);//z direction
