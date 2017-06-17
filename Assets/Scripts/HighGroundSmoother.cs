@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,16 +7,18 @@ public class HighGroundSmoother : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		
 	}
-	public static void SquareSmootherForHighGround(Vector3[] square ,ref float[,] betaHeights, float elevation,int width, int height){
+	public static KeyValuePair<float,float> SquareSmootherForHighGround(Vector3[] square ,ref float[,] betaHeights, float elevation,int width, int height){
+		float maxNoiseHeight = float.MinValue;
+		float minNoiseHeight = float.MaxValue;
+
 		Vector3 startPoint;
 		Vector3 endPoint;
 		Vector3 midPoint;
 		Vector3 prevMidPoint = Vector3.zero;
 		bool xstop, zstop;
 
-		for (int t = 0; t < 6; t++){
+		for (int t = 0; t < 10; t++){
 			/*
 				manual system to expand the corner points, this is done at the end to be ready for next round
 					#####		##0##
@@ -24,6 +27,7 @@ public class HighGroundSmoother : MonoBehaviour {
 					##2##		#####
 					#####		##2##
 			*/
+			print("ommak ar3a"+square[0]+","+square[1]+","+square[2]+","+square[3]);
 			if(square[0].z == 0 || square[3].x == 0 || square[1].x == width || square[2].z == height)
 				break;//TODO: try to fix the value that hits boarder, and contiue loop.
 			square[0].z--;square[1].x++;square[2].z++;square[3].x--;
@@ -34,9 +38,9 @@ public class HighGroundSmoother : MonoBehaviour {
 				midPoint.y = betaHeights[(int)midPoint.z,(int)midPoint.x];
 				int endIndex = (i==3)? 0:(i+1);
 				endPoint = square[endIndex];
-	//print("startPoint:"+startPoint+" > "+endPoint);
+
 				xstop = zstop = false;
-				//while (!xstop && !zstop){
+
 				while ( midPoint.x != endPoint.x && midPoint.z != endPoint.z ){
 
 					prevMidPoint = new Vector3(midPoint.x,betaHeights[(int)midPoint.z,(int)midPoint.x],midPoint.z);
@@ -54,36 +58,49 @@ public class HighGroundSmoother : MonoBehaviour {
 					}else if(startPoint.z > endPoint.z && midPoint.z > endPoint.z){
 						midPoint.z--;//will stop one step from end point
 					}else{
-						//if(xstop) { //so ystop= true as well , but I don't need to define this var
 							zstop = true;
-						//}
 					}	
 					
 					midPoint.y = betaHeights[(int)midPoint.z,(int)midPoint.x];
-					/** uncomment */
+
 					
-					//Vector3 newOmmak = ChnageTerrainElevationInPointAccordingToAngle(angle, SmoothersHelpers.SwichZandY(midPoint), SmoothersHelpers.SwichZandY(prevMidPoint), true);
-					Vector3 newOmmak = SmoothHigherGround(SmoothersHelpers.SwichZandY(midPoint), SmoothersHelpers.SwichZandY(square[i]),t);
-					betaHeights[(int)midPoint.z,(int)midPoint.x] = newOmmak.z/elevation;
-					/** end of uncomment */
-					//print("	midPoint:"+midPoint+", ??:"+( midPoint.x != endPoint.x)+" && "+(midPoint.z != endPoint.z ));
+
+					float newZ = SmoothHigherGround(SmoothersHelpers.SwichZandY(midPoint), SmoothersHelpers.SwichZandY(square[i]),t);
+					if(betaHeights[(int)midPoint.z,(int)midPoint.x] < (newZ/elevation))
+						betaHeights[(int)midPoint.z,(int)midPoint.x] = newZ/elevation;
+
+					if (betaHeights[(int)midPoint.z,(int)midPoint.x] > maxNoiseHeight) {
+						maxNoiseHeight = betaHeights[(int)midPoint.z,(int)midPoint.x];
+					} else if (betaHeights[(int)midPoint.z,(int)midPoint.x] < minNoiseHeight) {
+						minNoiseHeight = betaHeights[(int)midPoint.z,(int)midPoint.x];
+					}
+					else continue;
 				}
 			}
 		}
+		//more smoothing				
+		for (int y = (int)square[0].z; y <= square[2].z; y++) {
+			for (int x = (int)square[1].x; x < square[3].x; x++) {
+				betaHeights [x, y] = Mathf.InverseLerp (minNoiseHeight, maxNoiseHeight, betaHeights [x, y]);
+			}
+		}
+
+
+		return new KeyValuePair<float,float> ( minNoiseHeight, maxNoiseHeight );
 	}
 
-	internal static Vector3 SmoothHigherGround(Vector3 currentPoint, Vector3 lastPoint,int level){
-		print("<< SmoothHigherGround: "+lastPoint.z);
+	internal static float SmoothHigherGround(Vector3 currentPoint, Vector3 lastPoint,int level){
+		//print("<< SmoothHigherGround: "+lastPoint.z);
 		Vector3 targetDir = currentPoint - lastPoint;
 		float angle = Vector3.Angle(targetDir, Vector3.forward);
 		//if(Mathf.Abs(deffranceInAngle) > 45){
-			float rand = UnityEngine.Random.Range(0.10f,.25f);
-			currentPoint.z = ((lastPoint.z)*rand*(level+1));
-			print("	"+lastPoint.z+"*"+rand+"*"+(level+1)+"= "+currentPoint.z);
-			currentPoint.z = lastPoint.z - currentPoint.z;
+			float rand = UnityEngine.Random.Range(0.05f,.15f);
+			float _z = ((lastPoint.z)*rand*(level+1));
+			//print("	"+lastPoint.z+"*"+rand+"*"+(level+1)+"= "+currentPoint.z);
+			_z = lastPoint.z - _z;
 		//}
-		print("	>>>SmoothHigherGround: "+currentPoint.z);
-		return currentPoint;
+		//print("	>>>SmoothHigherGround: "+_z);
+		return _z;
 	}
 	
 	//TODO: fix smoothness it is very bad, (possion fixed)

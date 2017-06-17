@@ -145,20 +145,21 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 	private IEnumerator coroutine;
 	public void SmoothAroundIngredients(){
 		float t = Time.time;
-		print("SmoothAroundIngredients");
-;		for (int i = 0; i < (int)ingredientsCorners.Count-3; i+=4)
+		//print("SmoothAroundIngredients");
+		for (int i = 0; i < (int)ingredientsCorners.Count-3; i+=4)
 		{
-			print((0+i)+","+(1+i)+","+(2+i)+","+(3+i));
+			//print((0+i)+","+(1+i)+","+(2+i)+","+(3+i));
 			if(ingredientsCorners[0+i].y > betaHeightsForTest[(int)ingredientsCorners[0+i].x,(int)ingredientsCorners[0+i].z]){
 				//ZSideHighSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);
 				//XSideHighSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);
 				//print("HIGH");
 				
-				HighGroundSmoother.SquareSmootherForHighGround(new Vector3[]{ingredientsCorners[0+i],ingredientsCorners[3+i],
+				var pair = HighGroundSmoother.SquareSmootherForHighGround(new Vector3[]{ingredientsCorners[0+i],ingredientsCorners[3+i],
 																		ingredientsCorners[1+i],ingredientsCorners[2+i]},ref betaHeights, elevation, width,height);
-				print("________________________________________");
-				terrain.terrainData.SetHeights(0,0,betaHeights);
-				return;
+				
+
+				//terrain.terrainData.SetHeights(0,0,betaHeights);
+				//return;
 			}else{
 				OtherSideSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);//x direction
 				SideSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);//z direction
@@ -166,6 +167,8 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			}
 		}		
 		
+		
+
 		terrain.terrainData.SetHeights(0,0,betaHeights);
 
 		float finalTime = Time.time-t;
