@@ -8,23 +8,39 @@ public class HighGroundSmoother : MonoBehaviour {
 	void Start () {
 		
 	}
-	internal static void SquareSmootherForHighGround(Vector3[] square ,ref float[,] betaHeights, float elevation,int width, int height){
+	public static void SquareSmootherForHighGround(Vector3[] square ,ref float[,] betaHeights, float elevation,int width, int height){
 		Vector3 startPoint;
 		Vector3 endPoint;
 		Vector3 midPoint;
-		Vector3 prevMidPoint;
+		Vector3 prevMidPoint = Vector3.zero;
 		bool xstop, zstop;
+
 		for (int t = 0; t < 6; t++){
+			/*
+				manual system to expand the corner points, this is done at the end to be ready for next round
+					#####		##0##
+					##0##		#####
+					#3#1#	=>	3###1
+					##2##		#####
+					#####		##2##
+			*/
+			if(square[0].z == 0 || square[3].x == 0 || square[1].x == width || square[2].z == height)
+				break;//TODO: try to fix the value that hits boarder, and contiue loop.
+			square[0].z--;square[1].x++;square[2].z++;square[3].x--;
+
 			for (int i = 0; i < 4; i++)
 			{
 				startPoint = midPoint = square[i];
+				midPoint.y = betaHeights[(int)midPoint.z,(int)midPoint.x];
 				int endIndex = (i==3)? 0:(i+1);
 				endPoint = square[endIndex];
-	print("startPoint:"+startPoint+" > "+endPoint);
+	//print("startPoint:"+startPoint+" > "+endPoint);
 				xstop = zstop = false;
 				//while (!xstop && !zstop){
 				while ( midPoint.x != endPoint.x && midPoint.z != endPoint.z ){
-					prevMidPoint = midPoint;
+
+					prevMidPoint = new Vector3(midPoint.x,betaHeights[(int)midPoint.z,(int)midPoint.x],midPoint.z);
+
 					if(startPoint.x < endPoint.x && midPoint.x < endPoint.x){
 						midPoint.x++;//will stop one step from end point
 					}else if(startPoint.x > endPoint.x && midPoint.x > endPoint.x){
@@ -41,30 +57,33 @@ public class HighGroundSmoother : MonoBehaviour {
 						//if(xstop) { //so ystop= true as well , but I don't need to define this var
 							zstop = true;
 						//}
-					}
-
-					Vector3 targetDir = midPoint - prevMidPoint;// - ommak2;
-					float angle = Vector3.Angle(targetDir, Vector3.forward);
-					Vector3 newOmmak = ChnageTerrainElevationInPointAccordingToAngle(angle, SmoothersHelpers.SwichZandY(midPoint), SmoothersHelpers.SwichZandY(prevMidPoint), true);
+					}	
+					
+					midPoint.y = betaHeights[(int)midPoint.z,(int)midPoint.x];
+					/** uncomment */
+					
+					//Vector3 newOmmak = ChnageTerrainElevationInPointAccordingToAngle(angle, SmoothersHelpers.SwichZandY(midPoint), SmoothersHelpers.SwichZandY(prevMidPoint), true);
+					Vector3 newOmmak = SmoothHigherGround(SmoothersHelpers.SwichZandY(midPoint), SmoothersHelpers.SwichZandY(square[i]),t);
 					betaHeights[(int)midPoint.z,(int)midPoint.x] = newOmmak.z/elevation;
-					print("	midPoint:"+midPoint+", ??:"+( midPoint.x != endPoint.x)+" && "+(midPoint.z != endPoint.z ));
+					/** end of uncomment */
+					//print("	midPoint:"+midPoint+", ??:"+( midPoint.x != endPoint.x)+" && "+(midPoint.z != endPoint.z ));
 				}
 			}
-
-			
-
-			/*
-				manual system to expand the corner points, this is done at the end to be ready for next round
-					#####		##0##
-					##0##		#####
-					#3#1#	=>	3###1
-					##2##		#####
-					#####		##2##
-			*/
-			if(square[0].z == 0 || square[3].x == 0 || square[1].x == width || square[2].z == height)
-				break;//TODO: try to fix the value that hits boarder, and contiue loop.
-			square[0].z--;square[1].x++;square[2].z++;square[3].x--;
 		}
+	}
+
+	internal static Vector3 SmoothHigherGround(Vector3 currentPoint, Vector3 lastPoint,int level){
+		print("<< SmoothHigherGround: "+lastPoint.z);
+		Vector3 targetDir = currentPoint - lastPoint;
+		float angle = Vector3.Angle(targetDir, Vector3.forward);
+		//if(Mathf.Abs(deffranceInAngle) > 45){
+			float rand = UnityEngine.Random.Range(0.10f,.25f);
+			currentPoint.z = ((lastPoint.z)*rand*(level+1));
+			print("	"+lastPoint.z+"*"+rand+"*"+(level+1)+"= "+currentPoint.z);
+			currentPoint.z = lastPoint.z - currentPoint.z;
+		//}
+		print("	>>>SmoothHigherGround: "+currentPoint.z);
+		return currentPoint;
 	}
 	
 	//TODO: fix smoothness it is very bad, (possion fixed)

@@ -153,6 +153,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 				//ZSideHighSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);
 				//XSideHighSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);
 				//print("HIGH");
+				
 				HighGroundSmoother.SquareSmootherForHighGround(new Vector3[]{ingredientsCorners[0+i],ingredientsCorners[3+i],
 																		ingredientsCorners[1+i],ingredientsCorners[2+i]},ref betaHeights, elevation, width,height);
 				print("________________________________________");
