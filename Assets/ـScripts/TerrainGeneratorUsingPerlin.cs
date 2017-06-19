@@ -81,7 +81,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 				betaHeights[x,y] = heightEvaluation.Evaluate(betaHeights[x,y]);
 			}
 		}
-	
+		
 
 		terrainData.SetHeights(0,0,betaHeights);
 		return terrainData;
@@ -144,7 +144,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 	}
 	private IEnumerator coroutine;
 	public void SmoothAroundIngredients(){
-		float t = Time.realtimeSinceStartup;
+		float t = Time.time;
 		//print("SmoothAroundIngredients");
 		for (int i = 0; i < (int)ingredientsCorners.Count-3; i+=4)
 		{
@@ -152,7 +152,7 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			if(ingredientsCorners[0+i].y > betaHeightsForTest[(int)ingredientsCorners[0+i].x,(int)ingredientsCorners[0+i].z]){
 				//ZSideHighSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);
 				//XSideHighSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);
-				//print("HIGH");
+				print("HIGH");
 				
 				var pair = HighGroundSmoother.SquareSmootherForHighGround(new Vector3[]{ingredientsCorners[0+i],ingredientsCorners[3+i],
 																		ingredientsCorners[1+i],ingredientsCorners[2+i]},ref betaHeights, elevation, width,height);
@@ -163,120 +163,18 @@ public class TerrainGeneratorUsingPerlin : MonoBehaviour {
 			}else{
 				OtherSideSmoothing(ingredientsCorners[0+i],ingredientsCorners[1+i]);//x direction
 				SideSmoothing(ingredientsCorners[2+i],ingredientsCorners[3+i]);//z direction
-				//print("LOW");
+				print("LOW");
 			}
-		}
-
-		int Tw = terrain.terrainData.heightmapWidth;
-        int Th = terrain.terrainData.heightmapHeight;
-		//smooth function from old famus terraintoolkit : https://github.com/unitycoder/unityterraintoolkit/blob/f29819161e1cb00dc77c302908cf378f5fe9fcf7/Assets/TerrainToolkit/Scripts/TerrainToolkit.cs
-		betaHeights = smooth(betaHeights, new Vector2(Tw, Th), Neighbourhood.Moore);	
+		}		
 		
+		
+
 		terrain.terrainData.SetHeights(0,0,betaHeights);
 
-		float finalTime = Time.realtimeSinceStartup -t;
+		float finalTime = Time.time-t;
 		print("Time : "+finalTime.ToString());
 		
 	}
-
-	public enum Neighbourhood { Moore = 0, VonNeumann = 1 }
-	private float[,] smooth(float[,] heightMap, Vector2 arraySize, Neighbourhood neighbourhood)
-        {
-            int Tw = (int)arraySize.x-1;
-            int Th = (int)arraySize.y-1;
-			print(Tw+" & "+Th);
-            int xNeighbours;
-            int yNeighbours;
-            int xShift;
-            int yShift;
-            int xIndex;
-            int yIndex;
-            int Tx;
-            int Ty;
-			var smoothIterations = 1;
-            // Start iterations...
-            for (int iter = 0; iter < smoothIterations; iter++)
-            {
-                for (Ty = 0; Ty < Th; Ty++)
-                {
-                    // y...
-                    if (Ty == 0)
-                    {
-                        yNeighbours = 2;
-                        yShift = 0;
-                        yIndex = 0;
-                    } else if (Ty == Th - 1)
-                    {
-                        yNeighbours = 2;
-                        yShift = -1;
-                        yIndex = 1;
-                    } else
-                    {
-                        yNeighbours = 3;
-                        yShift = -1;
-                        yIndex = 1;
-                    }
-                    for (Tx = 0; Tx < Tw; Tx++)
-                    {
-                        // x...
-                        if (Tx == 0)
-                        {
-                            xNeighbours = 2;
-                            xShift = 0;
-                            xIndex = 0;
-                        } else if (Tx == Tw - 1)
-                        {
-                            xNeighbours = 2;
-                            xShift = -1;
-                            xIndex = 1;
-                        } else
-                        {
-                            xNeighbours = 3;
-                            xShift = -1;
-                            xIndex = 1;
-                        }
-                        int Ny;
-                        int Nx;
-                        float hCumulative = 0.0f;
-                        int nNeighbours = 0;
-						int _x;
-						int _y;
-                        for (Ny = 0; Ny < yNeighbours; Ny++)
-                        {
-                            for (Nx = 0; Nx < xNeighbours; Nx++)
-                            {
-                                if (neighbourhood == Neighbourhood.Moore || (neighbourhood == Neighbourhood.VonNeumann && (Nx == xIndex || Ny == yIndex)))
-                                {
-									//print((Tx + Nx + xShift)+","+(Ty + Ny + yShift));
-									_x = (Tx + Nx + xShift);
-									_y = (Ty + Ny + yShift);
-
-									//if(_y == 0 || _x == 0 || _x == width || _y == height)
-									//	continue;
-
-									float heightAtPoint = heightMap[_x , _y]; // Get height at point
-									hCumulative += heightAtPoint;
-									nNeighbours++;
-                                }
-                            }
-                        }
-                        float hAverage = hCumulative / nNeighbours;
-
-						_x = (Tx + xIndex + xShift);
-						_y = (Ty + yIndex + yShift);
-						//if(_y == 0 || _x == 0 || _x == width || _y == height)
-						//	continue;
-                        heightMap[Tx + xIndex + xShift, Ty + yIndex + yShift] = hAverage;
-                    }
-                }
-                // Show progress...
-                //float percentComplete = (iter + 1) / smoothIterations;
-                //generatorProgressDelegate("Smoothing Filter", "Smoothing height map. Please wait.", percentComplete);
-            }
-            return heightMap;
-        }
-
-	/* ************************************************************* */
 	private void ZSideHighSmoothing(Vector3 pointA, Vector3 pointZ){
 		pointA.z-=1; pointZ.z+=1;//for higher ground this expansion is expanding one side only
 		Vector3 point = pointA;

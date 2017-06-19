@@ -18,7 +18,7 @@ public class HighGroundSmoother : MonoBehaviour {
 		Vector3 prevMidPoint = Vector3.zero;
 		bool xstop, zstop;
 
-		for (int t = 0; t < 20; t++){
+		for (int t = 0; t < 10; t++){
 			/*
 				manual system to expand the corner points, this is done at the end to be ready for next round
 					#####		##0##
@@ -34,8 +34,6 @@ public class HighGroundSmoother : MonoBehaviour {
 			for (int i = 0; i < 4; i++)
 			{
 				startPoint = midPoint = square[i];
-				if(midPoint.z == 0 || midPoint.x == 0 || midPoint.x == width || midPoint.z == height)
-					continue;
 				midPoint.y = betaHeights[(int)midPoint.z,(int)midPoint.x];
 				int endIndex = (i==3)? 0:(i+1);
 				endPoint = square[endIndex];
